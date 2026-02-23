@@ -1,0 +1,197 @@
+---
+title: '法线贴图'
+description: '推导TBN矩阵并展示如何应用法线贴图'
+date: '2025-12-09'
+tags: ['图形学']
+---
+
+本文章将介绍法线映射（Normal Mapping）的数学原理，并提供一个我的着色器实现。
+
+## 切线空间
+
+**切线空间（Tangent Space）** 是定义在图元（Primitives）上方的一个局部空间。
+
+其坐标系由三个单位正交基底 $\{ T, B, N \}$ 定义，其中 $T$ 和 $B$ 分别与局部纹理坐标系的 $U$ 和 $-V$ 方向一致，$N$ 为图元的法线方向，示意图如下：
+
+![Illustration-1](image-1.png)
+
+这意味着在生成法线贴图时，假定了片元的 **切线空间坐标系** 与 **右手世界坐标系** 对齐。
+
+因此，想要将法线贴图存储的法线还原到世界空间（World Space），只需要计算出当前片元在世界空间下的 $\{ T, B, N \}$ ，并以此作为从贴图采样得到的法线的基底即可：
+
+$$
+    \vec{N}_{world} = \
+    N_{t_x} \vec{T} + \
+    N_{t_y} \vec{B} + \
+    N_{t_z} \vec{N}
+$$
+
+上式可改写为矩阵形式，$TBN$ 矩阵由此得名：
+
+$$
+    \begin{bmatrix} N_{w_x} \\ N_{w_y} \\ N_{w_z} \end{bmatrix} = \
+    \begin{bmatrix} T_x & B_x & N_x \\ T_y & B_y & N_y \\ T_z & B_z & N_z \end{bmatrix} \
+    \begin{bmatrix} N_{t_x} \\ N_{t_y} \\ N_{t_z} \end{bmatrix}
+$$
+
+## 矩阵推导
+
+通常我们只关注 $T$ 和 $B$ 的推导，原因有二：
+
+1. $T$ 和 $B$ 向量取决于图元的纹理坐标，要计算这两个向量并不直观（相较于法线）。
+
+2. $N$ 通常由模型作为顶点属性提供，甚至可以由 $T$ 与 $B$ 叉乘得到。
+
+----
+
+下面开始正式推导。
+
+考虑单个三角形片元，$P_1, P_2, P_3$ 为其三个顶点，$\Delta U$ 和 $\Delta V$ 为任意两顶点的纹理坐标之差，如图：
+
+![Illustration-2](image-2.png)
+
+由图可知 $E_1, E_2$ 可以表示为 $T$ 和 $B$ 的线性组合（由于 $B$ 与 $V$ 方向相反，$\Delta V$ 前取负号）：
+
+$$
+    \vec{E}_1 = \
+    \Delta U_1 \vec{T} - \
+    \Delta V_1 \vec{B}
+$$
+$$
+    \vec{E}_2 = \
+    \Delta U_2 \vec{T} - \
+    \Delta V_2 \vec{B}
+$$
+
+为了写成矩阵形式，将上式的向量用分量展开：
+
+$$
+    \left(E_{1x}, E_{1y}, E_{1z} \right) = \Delta U_1 \left(T_x, T_y, T_z \right) - \Delta V_1 \left(B_x, B_y, B_z \right)
+$$
+$$
+    \left(E_{2x}, E_{2y}, E_{2z} \right) = \Delta U_2 \left(T_x, T_y, T_z\right) - \Delta V_2 \left(B_x, B_y, B_z \right)
+$$
+
+矩阵形式即为：
+
+$$
+    \begin{bmatrix} E_{1x} & E_{1y} & E_{1z} \\ E_{2x} & E_{2y} & E_{2z} \end{bmatrix} = \
+    \begin{bmatrix} \Delta U_1 & -\Delta V_1 \\ \Delta U_2 & -\Delta V_2 \end{bmatrix} \
+    \begin{bmatrix} T_x & T_y & T_z \\ B_x & B_y & B_z \end{bmatrix}
+$$
+
+为了分离出 $(T, B)$ 矩阵，两侧左乘一次逆矩阵：
+
+$$
+    \begin{bmatrix} \Delta U_1 & -\Delta V_1 \\ \Delta U_2 & -\Delta V_2 \end{bmatrix}^{-1} \
+    \begin{bmatrix} E_{1x} & E_{1y} & E_{1z} \\ E_{2x} & E_{2y} & E_{2z} \end{bmatrix} = \
+    \begin{bmatrix} T_x & T_y & T_z \\ B_x & B_y & B_z \end{bmatrix}
+$$
+
+使用伴随矩阵法算出逆矩阵，整理后可得到 $(T, B)$ 的矩阵表示：
+
+$$
+    \begin{bmatrix} T_x & T_y & T_z \\ B_x & B_y & B_z \end{bmatrix} = \
+    \frac{1}{\Delta U_2 \Delta V_1 - \Delta U_1 \Delta V_2} \
+    \begin{bmatrix} -\Delta V_2 & \Delta V_1 \\ -\Delta U_2 & \Delta U_1 \end{bmatrix} \
+    \begin{bmatrix} E_{1x} & E_{1y} & E_{1z} \\ E_{2x} & E_{2y} & E_{2z} \end{bmatrix}
+$$
+
+## 着色器实现
+
+实际应用时，我们可以更进一步地只计算 $T$ 或 $B$ 其一，然后与 $N$ 叉乘得到另一个向量。
+
+此处以计算 $T$ 为例。[矩阵推导](#矩阵推导)的结果可以进一步简化为只包含 $T$ 的形式：
+
+$$
+    \begin{bmatrix} T_x & T_y & T_z \end{bmatrix} =\
+    \frac{1}{\Delta U_2 \Delta V_1 - \Delta U_1 \Delta V_2} \
+    \begin{bmatrix} -\Delta V_2 & \Delta V_1 \end{bmatrix} \
+    \begin{bmatrix} E_{1x} & E_{1y} & E_{1z} \\ E_{2x} & E_{2y} & E_{2z} \end{bmatrix}
+$$
+
+由于 $T$ 总需要被标准化，同时为了避免出现除零操作，可以直接乘以常数项分母来保留符号：
+
+$$
+    \begin{bmatrix} T_x & T_y & T_z \end{bmatrix} =\
+    \left(\Delta U_2 \Delta V_1 - \Delta U_1 \Delta V_2 \right) \
+    \begin{bmatrix} -\Delta V_2 & \Delta V_1 \end{bmatrix} \
+    \begin{bmatrix} E_{1x} & E_{1y} & E_{1z} \\ E_{2x} & E_{2y} & E_{2z} \end{bmatrix}
+$$
+
+上式转化为向量形式：
+
+$$
+    \vec{T} = \
+    \left(\Delta U_2 \Delta V_1 - \Delta U_1 \Delta V_2 \right) \cdot \
+    (\Delta V_1 \vec{E}_2 - \Delta V_2 \vec{E}_1)
+$$
+
+此外，法线由顶点着色器传递至片段着色器时发生了插值，这可能会导致 $T$ 与 $N$ 不垂直，所以需要对计算得到的 $T$ 进行施密特正交化（Gram-Schmidt Process）：
+
+$$
+    \vec{T}_{\perp} = \vec{T} - (\vec{T} \cdot \vec{N}) \cdot \vec{N}
+$$
+
+最终，上述结论可以推广到片元（Fragments）并且使用着色器偏导函数获得 $E$ 、$\Delta U$ 和 $\Delta V$。
+
+- GLSL 实现代码（OpenGL / [cabin](https://github.com/anpydx/cabin)）
+
+```glsl
+#![version("430 core")]
+
+#![vertex]
+layout (location = 0) in vec3 aPosition;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoord;
+
+out vec3 vPosition;
+out vec3 vNormal;
+out vec2 vTexCoord;
+
+uniform mat4 model;
+uniform mat3 normalMatrix;
+
+void main() {
+    vPosition = (vec4(aPosition, 1.0) * model).xyz;
+    vNormal = aNormal * normalMatrix;
+    vTexCoord = aTexCoord;
+    ...
+}
+
+#![fragmet]
+in vec3 vPosition;
+in vec3 vNormal;
+in vec2 vTexCoord;
+
+uniform sampler2D normalTexture;
+
+vec3 getNormalFromTexture() {
+    vec3 tangentSpaceNormal = texture2D(normalTexture, vTexCoord).rgb;
+    tangentSpaceNormal = 2.0 * tangentSpaceNormal - 1.0;
+
+    vec3 E1 = dFdx(vPosition);
+    vec3 E2 = dFdy(vPosition);
+    vec2 T1 = dFdx(vTexCoord);
+    vec2 T2 = dFdy(vTexCoord);
+
+    vec3 N = normalize(vNormal);
+    vec3 T = (T2.x * T1.y - T1.x * T2.y) * (T1.y * E2 - T2.y * E1);
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = normalize(cross(N, T));
+
+    mat3 TBN = mat3(T, B, N);
+    return normalize(TBN * tangentSpaceNormal);
+}
+
+void main() {
+    vec3 N = getNormalFromTexture();
+    ...
+}
+```
+
+## 参考文献
+
+- [LearnOpenGL-CN - 法线贴图](https://learnopengl-cn.github.io/05%20Advanced%20Lighting/04%20Normal%20Mapping/)
+
+- [知乎 - shader复习与深入：Normal Map(法线贴图)](https://zhuanlan.zhihu.com/p/158633488)

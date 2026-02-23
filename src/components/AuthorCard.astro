@@ -1,0 +1,70 @@
+---
+import Link from '@/components/Link.astro'
+import AvatarComponent from '@/components/ui/avatar'
+import { cn } from '@/lib/utils'
+import type { SocialLink } from '@/types'
+import SocialIcons from './SocialIcons.astro'
+
+interface Props {
+  author: {
+    name: string,
+    avatar: string,
+    bio?: string,
+    pronouns?: string,
+    website?: string,
+    github?: string,
+    twitter?: string,
+    linkedin?: string,
+    mail?: string
+  }
+}
+
+const { author } = Astro.props
+const { name, avatar, bio, pronouns } = author
+const canRedirect = false
+
+const socialLinks: SocialLink[] = [
+  author.website && { href: author.website, label: 'Website' },
+  author.github && { href: author.github, label: 'GitHub' },
+  author.twitter && { href: author.twitter, label: 'Twitter' },
+  author.linkedin && { href: author.linkedin, label: 'LinkedIn' },
+  author.mail && { href: `mailto:${author.mail}`, label: 'Email' },
+].filter(Boolean) as SocialLink[]
+---
+
+<div
+  class="has-[a:hover]:bg-muted/50 overflow-hidden rounded-xl border p-4 transition-colors duration-300 ease-in-out"
+>
+  <div class="flex flex-wrap gap-4">
+    <Link
+      href={`/about`}
+      class={cn('block', !canRedirect && 'pointer-events-none')}
+    >
+      <AvatarComponent
+        client:load
+        src={avatar}
+        alt={`Avatar of ${name}`}
+        fallback={name[0]}
+        className={cn(
+          'size-32 rounded-md [&>[data-slot="avatar-fallback"]]:rounded-md',
+          canRedirect &&
+            'hover:ring-primary transition-shadow duration-300 hover:cursor-pointer hover:ring-2',
+        )}
+      />
+    </Link>
+    <div class="flex grow flex-col justify-between gap-y-4">
+      <div>
+        <div class="flex flex-wrap items-center gap-x-2">
+          <h3 class="text-lg font-medium">{name}</h3>
+          {
+            pronouns && (
+              <span class="text-muted-foreground text-sm">({pronouns})</span>
+            )
+          }
+        </div>
+        <p class="text-muted-foreground text-sm">{bio}</p>
+      </div>
+      <SocialIcons links={socialLinks} />
+    </div>
+  </div>
+</div>

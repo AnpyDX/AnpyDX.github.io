@@ -1,0 +1,13 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import PageHead from '@/components/PageHead.astro'
+import Breadcrumbs from '@/components/Breadcrumbs.astro'
+import SearchSection from '@/components/react/SearchSection'
+
+---
+
+<Layout class="max-w-3xl">
+  <PageHead slot="head" title="搜索本站" />
+  <Breadcrumbs items={[{ label: '搜索本站', icon: 'lucide:search' }]} />
+  <SearchSection client:load />
+</Layout>
