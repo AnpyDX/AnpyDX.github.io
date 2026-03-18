@@ -1,0 +1,274 @@
+---
+title: '算法学习笔记'
+description: '个人算法竞赛笔记'
+date: '2026-03-08'
+tags: ['算法']
+---
+
+时间复杂度参考：[Acwing - 由数据范围反推算法复杂度以及算法内容](https://www.acwing.com/blog/content/32/)。
+
+## 枚举
+
+### 1. 指数型枚举
+
+从 $1 \sim n$ 这 $n$ 个整数中随机选取任意多个，输出所有可能的选择方案。
+
+相关例题：[92. 递归实现指数型枚举](https://www.acwing.com/activity/content/problem/content/1545/)，时间复杂度 $O(n^2)$。
+
+- 递归解法
+
+```cpp
+const int N = 15;
+bool bt[N];
+int n;
+
+void dfs(int x) {
+    if (x == n) {
+        for (int i = 0; i < n; i++)
+            if (bt[i]) printf("%d ", i + 1);
+        puts("");
+        return;
+    }
+
+    bt[x] = true;
+    dfs(x + 1);
+    bt[x] = false;
+    dfs(x + 1);
+}
+
+int main() {
+    scanf("%d", &n);
+    dfs(0);
+}
+```
+
+- 非递归解法
+
+```cpp
+int main() {
+    int n;
+    scanf("%d", &n);
+
+    for (int i = 0; i < (1 << n); i++) {
+        for (int j = 0; j < n; j++) {
+            if ((i >> j) & 1)
+                printf("%d ", j + 1);
+        }
+        puts("");
+    }
+}
+```
+
+### 2. 排列型枚举
+
+把 $1 \sim n$ 这 $n$ 个整数排成一行后随机打乱顺序，输出所有可能的次序。
+
+相关例题：[94. 递归实现排列型枚举](https://www.acwing.com/activity/content/problem/content/1548/)，时间复杂度 $O(n!)$。
+
+```cpp
+const int N = 10;
+int n;
+bool bt[N];
+int res[N];
+
+void dfs(int x) {
+    if (x == n) {
+        for (int i = 0; i < n; i++)
+            printf("%d ", res[i]);
+        puts("");
+        return;
+    }
+
+    for (int i = 1; i <= n; i++) {
+        if (!bt[i]) {
+            bt[i] = true;
+            res[x] = i;
+            dfs(x + 1);
+            bt[i] = false;
+        }
+    }
+}
+
+int main() {
+    scanf("%d", &n);
+    dfs(0);
+}
+```
+
+### 3. 组合型枚举
+
+从 $1 \sim n$ 这 $n$ 个整数中随机选出 $m$ 个，且同一行内的数升序排列，对于相邻任意两行要求字典序较小的排在前面，输出所有可能的选择方案。
+
+相关例题：[93. 递归实现组合型枚举](https://www.acwing.com/activity/content/problem/content/1547/)。
+
+- 递归解法
+
+```cpp
+const int N = 25;
+int n, m;
+int res[N];
+
+void dfs(int i, int x) {
+    if (i == m) {
+        for (int j = 0; j < m; j++)
+            printf("%d ", res[j]);
+        puts("");
+        return;
+    }
+
+    for (int j = x; j <= n; j++) {
+        res[i] = j;
+        dfs(i + 1, j + 1);
+    }
+}
+
+int main() {
+    scanf("%d%d", &n, &m);
+    dfs(0, 1);
+}
+```
+
+- 非递归解法（Gosper's Hack）
+
+```cpp
+int main() {
+    int n, k;
+    cin >> n >> k;
+    
+    k = n - k;
+    
+    int cur = (1 << k) - 1;
+    int limit = cur << (n - k);
+    
+    while (cur <= limit) {
+        for (int i = 1; i <= n; i++) {
+            if (!(cur & (1 << n - i)))
+                cout << i << " ";
+        }
+        cout << endl;
+        
+        int lb = cur & -cur;
+        int r = cur + lb;
+        cur = ((r ^ cur) >> __builtin_ctz(lb) + 2) | r;
+    }
+}
+```
+
+## 递推
+
+*TODO*
+
+## 二分查找
+
+*TODO*
+
+## 前缀和
+
+*TODO*
+
+## 动态规划
+
+*TODO*
+
+## 归并排序
+
+*TODO*
+
+## 树状数组
+
+树状数组特化为解决线段树可解问题集合的一个特定子集（**动态单点修改后求和**），相较于线段树有代码短和存储空间小的特点。
+
+树状数组使用长度为 $N$ 的数组存储，支持 **单点修改** 和 **区间求和**。
+
+存储结构利用了索引编号二进制表示低位的周期规律性。
+
+时间复杂度：均为 $O(\log{n})$
+
+空间复杂度：$O(n)$
+
+相关例题：[1264. 动态求连续区间和](https://www.acwing.com/activity/content/problem/content/1719/)。
+
+- 模板代码
+
+```cpp
+/** NOTE: 树状数组与原数组
+*   1. 数组长度一致
+*   2. 索引均从 `1` 开始计数
+*/
+
+const int N = 110;
+int tr[N];
+int n; // 原数组长度
+
+int lowbit(int x) {
+    return x & -x;
+}
+
+void add(int x, int v) {
+    for (int i = x; i <= n; i += lowbit(i))
+        tr[i] += v;
+}
+
+// Query sum of (l, r]
+int query(int l, int r) {
+    if (l == 0) {
+        int res = 0; // FIXME Use `long long` instead
+        for (int i = r; i > 0; i -= lowbit(i))
+            res += tr[i];
+        return res;
+    }
+    return query(0, r) - query(0, l);
+}
+```
+
+## 线段树
+
+线段树可解决 **动态单点修改后求和**、**区间最值问题** 和 **扫描线算法** 等问题。
+
+线段树使用长度为 $4N$ 的数组存储，支持 **单点修改** 和 **区间查询** 操作（可使用懒标记实现区间修改 *TODO*）。
+
+时间复杂度：均为 $O(\log{n})$
+
+空间复杂度：$O(n)$
+
+- 解释数组长度为 $4N$ 的图例
+
+<div class="flex gap-4 flex-wrap justify-center [&_img,p]:m-0">
+  <div class="max-w-2xl">
+    ![image-1](image-1.png)
+  </div>
+</div>
+
+相关例题：
+
+- 动态修改求和：[1264. 动态求连续区间和](https://www.acwing.com/activity/content/problem/content/1719/)
+
+- 区间最值问题：[1270. 数列区间最大值](https://www.acwing.com/activity/content/problem/content/1721/)
+
+- 扫描线算法：[1228. 油漆面积](https://www.acwing.com/activity/content/problem/content/1723)
+
+## 差分
+
+差分是前缀和的逆运算，通过记录差值来使得区间修改操作时间复杂度降低至 $O(1)$。
+
+使用差分算法的一般步骤为：
+
+1. 计算差分数组
+
+2. 将区间修改转换为对差分数组的修改
+
+3. 求前缀和获取修改后结果
+
+其中，可以先写出（对差分数组，即原数组的）前缀和公式，再通过移项得到差分公式。
+
+时间复杂度：修改操作 $O(1)$，查询操作 $O(n)$
+
+空间复杂度：$O(n)$（具体为 $2N \sim 3N$
+
+相关例题：
+
+- 一维差分：[797. 差分](https://www.acwing.com/activity/content/problem/content/1736/)
+
+- 二维差分：[798. 差分矩阵](https://www.acwing.com/activity/content/problem/content/1737/)
+
+- 三维差分：[1232. 三体攻击](https://www.acwing.com/activity/content/problem/content/1724/)
