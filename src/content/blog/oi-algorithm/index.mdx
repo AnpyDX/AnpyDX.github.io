@@ -5,6 +5,8 @@ date: '2026-03-08'
 tags: ['算法']
 ---
 
+import Callout from '@/components/callout.astro'
+
 时间复杂度参考：[Acwing - 由数据范围反推算法复杂度以及算法内容](https://www.acwing.com/blog/content/32/)。
 
 ## 枚举
@@ -160,7 +162,51 @@ int main() {
 
 ## 二分查找
 
-*TODO*
+针对 **有序（单调）** 、连续或离散的数据集合的查找算法。
+
+时间复杂度：$O(\log{n})$
+
+- 模板代码
+
+```cpp
+// 针对递增的有序数组
+
+int lowerbound(int left, int right) {
+    int l = 0, r = N - 1;
+    while (l < r) {
+        int mid = (l + r) >> 1;
+
+        if (arr[mid] < target)
+            l = mid + 1;
+        else
+            r = mid;
+    }
+
+    return l;
+}
+
+int upperbound(int left, int right) {
+    int l = 0, r = N - 1;
+    while (l < r) {
+        int mid = (l + r + 1) >> 1;
+        if (arr[mid] > target)
+            r = mid - 1;
+        else
+            l = mid;
+    }
+    return l;
+}
+```
+
+<Callout>
+    `mid = (l + r) >> 1` 执行下取整除法，最坏情况结果为 `l` 本身，因此在出现 `l = mid` 时应该采用 `mid = (l + r + 1) >> 1` 上取整除法来使得 `l` 总能增大来避免死循环。
+</Callout>
+
+相关例题：
+
+- [789. 数的范围](https://www.acwing.com/activity/content/problem/content/1566/) （离散数据）
+
+- [790. 数的三次方根](https://www.acwing.com/activity/content/problem/content/1567/) （连续数据）
 
 ## 前缀和
 
@@ -172,11 +218,56 @@ int main() {
 
 ## 归并排序
 
-*TODO*
+时间复杂度为 $O(n\log{n})$ 的排序算法，可拓展解决 **逆序对问题**。
+
+时间复杂度：$O(n\log{n})$
+
+空间复杂度：$O(n)$
+
+- 模板代码
+
+```cpp
+const int N = 1e5 + 10;
+int s[N]; // 原数组
+int t[N]; // 临时数组
+
+void mergeSort(int left, int right) {
+    if (left == right) return;
+
+    int mid = (left + right) >> 1;
+    mergeSort(left, mid);
+    mergeSort(mid + 1, right);
+
+    int cur = left;
+    int l = left, r = mid + 1;
+    while (l <= mid && r <= right) {
+        if (s[l] <= s[r]) t[cur++] = s[l++];
+        else t[cur++] = s[r++];
+    }
+
+    while (l <= mid)
+        t[cur++] = s[l++];
+    while (r <= right)
+        t[cur++] = s[r++];
+
+    for (int i = left; i <= right; i++)
+        s[i] = t[i];
+}
+```
+
+相关例题：
+
+- [787. 归并排序](https://www.acwing.com/activity/content/problem/content/1601/)
+
+- [788. 逆序对的数量](https://www.acwing.com/activity/content/problem/content/1606/)
+
+- [1215. 小朋友排队](https://www.acwing.com/activity/content/problem/content/1722/)
 
 ## 树状数组
 
-树状数组特化为解决线段树可解问题集合的一个特定子集（**动态单点修改后求和**），相较于线段树有代码短和存储空间小的特点。
+树状数组特是一种特殊的数据结构，特化为解决线段树可解问题集合的一个特定子集，即 **动态单点修改后求和**。
+
+树状数组解题代码量和运行时间均低于线段树，故解决上述问题优先使用该数据结构。
 
 树状数组使用长度为 $N$ 的数组存储，支持 **单点修改** 和 **区间求和**。
 
@@ -223,7 +314,7 @@ int query(int l, int r) {
 
 ## 线段树
 
-线段树可解决 **动态单点修改后求和**、**区间最值问题** 和 **扫描线算法** 等问题。
+线段树可解决 **动态单点修改后求和** 和 **区间最值问题** 问题，可拓展为 **扫描线算法**。
 
 线段树使用长度为 $4N$ 的数组存储，支持 **单点修改** 和 **区间查询** 操作（可使用懒标记实现区间修改 *TODO*）。
 
@@ -263,7 +354,7 @@ int query(int l, int r) {
 
 时间复杂度：修改操作 $O(1)$，查询操作 $O(n)$
 
-空间复杂度：$O(n)$（具体为 $2N \sim 3N$
+空间复杂度：$O(n)$
 
 相关例题：
 
@@ -272,3 +363,15 @@ int query(int l, int r) {
 - 二维差分：[798. 差分矩阵](https://www.acwing.com/activity/content/problem/content/1737/)
 
 - 三维差分：[1232. 三体攻击](https://www.acwing.com/activity/content/problem/content/1724/)
+
+## 双指针
+
+*TODO*
+
+## 贪心
+
+*TODO*
+
+## 数论
+
+*TODO*
