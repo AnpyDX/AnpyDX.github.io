@@ -6,7 +6,7 @@ export const SITE: Site = {
   href: 'https://anpydx.github.io',
   author: 'anpyd',
   locale: 'zh-CN',
-  featuredPostCount: 1,
+  featuredPostCount: 2,
   postsPerPage: 4,
 }
 
