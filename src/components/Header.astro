@@ -3,7 +3,8 @@ import Link from '@/components/Link.astro'
 import ThemeToggle from '@/components/ThemeToggle.astro'
 import { Button } from '@/components/ui/button'
 import { NAV_LINKS, SITE } from '@/consts'
-import { LibraryBig, Search } from 'lucide-react'
+import { LibraryBig } from 'lucide-react'
+import { Icon } from 'astro-icon/components'
 ---
 
 <div>
@@ -31,12 +32,19 @@ import { LibraryBig, Search } from 'lucide-react'
         }
       </nav>
       
-      <a href="/search">
-        <Button variant='ghost' size="icon" className="-my-2 -me-2 size-8">
-          <Search />
+      <a href="/search" class="flex">
+        <Button 
+          id="search-button"
+          variant="ghost"
+          size="icon"
+          title="Search website"
+          className="-my-2 -me-2 size-8"
+          >
+          <Icon name="lucide:search" class="size-4 absolute" />
+          <span class="sr-only">Search website</span>
         </Button>
       </a>
-      
+
       <ThemeToggle transition:persist />
     </div>
   </div>
