@@ -162,7 +162,7 @@ int main() {
 
 ## 二分查找
 
-针对 **有序（单调）** 、连续或离散的数据集合的查找算法。
+针对 **有序（单调）** 的（离散或连续）数据集合的查找算法。
 
 时间复杂度：$O(\log{n})$
 
@@ -342,6 +342,10 @@ int query(int l, int r) {
 
 差分是前缀和的逆运算，通过记录差值来使得区间修改操作时间复杂度降低至 $O(1)$。
 
+时间复杂度：修改操作 $O(1)$，查询操作 $O(n)$
+
+空间复杂度：$O(n)$
+
 使用差分算法的一般步骤为：
 
 1. 计算差分数组
@@ -351,10 +355,6 @@ int query(int l, int r) {
 3. 求前缀和获取修改后结果
 
 其中，可以先写出（对差分数组，即原数组的）前缀和公式，再通过移项得到差分公式。
-
-时间复杂度：修改操作 $O(1)$，查询操作 $O(n)$
-
-空间复杂度：$O(n)$
 
 相关例题：
 
@@ -374,4 +374,48 @@ int query(int l, int r) {
 
 ## 数论
 
-*TODO*
+## 1. 最大公约数（欧几里得算法）
+
+- 模板代码
+
+```cpp
+int gcd(int a, int b) {
+    return b ? gcd(b, a % b) : a;
+}
+```
+
+相关例题：[1246. 等差数列](https://www.acwing.com/activity/content/problem/content/1796/)
+
+## 2. 筛法求素数
+
+求 $1 \sim n$ 中所有质数，以及 $1 \sim n$ 中各数的最小质因子。
+
+时间复杂度：$O(n)$
+
+- 模板代码
+
+```cpp
+const int N = 1010;
+// 所有质数集合
+int primes[N], cnt;
+// i 的最小质因子表
+int minp[N];
+bool st[N];
+
+void get_primes(int n) {
+    for (int i = 1; i <= n; i++) {
+        if (!st[i]) primes[cnt++] = i, minp[i] = i;
+        for (int j = 0; primes[j] * i <= n; j++) {
+            st[primes[j] * i] = true;
+            minp[primes[j] * i] = primes[j];
+            if (i % primes[j] == 0) break;
+        }
+    }
+}
+```
+
+相关例题：[1295. X的因子链](https://www.acwing.com/activity/content/problem/content/1797/)
+
+## 数学结论
+
+1. 算数基本定理：任何一个大于 $1$ 的自然数 $N$，如果 $N$ 不为质数，那么 $N$ 可以唯一分解成有限个质数的乘积。
