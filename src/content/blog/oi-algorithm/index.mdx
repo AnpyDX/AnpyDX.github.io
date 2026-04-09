@@ -368,15 +368,54 @@ int query(int l, int r) {
 
 *TODO*
 
+## 图论
+
+### 存储方式
+
+- 邻接表（以树为例）
+
+```cpp
+const int N = 1e5; // 顶点数
+const int M = 2 * N; // 边数
+
+int w[N]; // 顶点权值
+int h[M], e[M], ne[M], idx;
+
+// 初始化图
+void init() {
+    idx = 0;
+    memset(h, -1, sizeof(h));
+}
+
+// 添加一条 a -> b 的边
+void add(int a, int b) {
+    e[idx] = b， ne[idx] = h[a], h[a] = idx++;
+}
+
+void dfs(int u, int parent) {
+    for (int i = h[i]; i != -1; i = ne[i]) {
+        if (i == parent) continue;
+        dfs(e[i], u);
+        printf("%d ", w[e[i]]);
+    }
+}
+```
+
+相关例题：
+
+- [1220. 生命之树](https://www.acwing.com/activity/content/problem/content/1807/)
+
+- [826. 单链表](https://www.acwing.com/activity/content/problem/content/1759/)
+
 ## 贪心
 
 *TODO*
 
 ## 数论
 
-## 1. 最大公约数（欧几里得算法）
+### 1. 最大公约数
 
-- 模板代码
+- 欧几里得算法
 
 ```cpp
 int gcd(int a, int b) {
@@ -386,7 +425,19 @@ int gcd(int a, int b) {
 
 相关例题：[1246. 等差数列](https://www.acwing.com/activity/content/problem/content/1796/)
 
-## 2. 筛法求素数
+### 2. 质数问题
+
+#### 算数基本定理
+
+任何一个大于 $1$ 的自然数 $N$，如果 $N$ 不为质数，那么 $N$ 可以唯一分解成有限个质数的乘积，即
+
+$$
+    N = P^{\alpha_1}_1 \times P^{\alpha_2}_2 \times \ldots \times P^{\alpha_k}_k
+$$
+
+其中 $\alpha_i \ge 0$。
+
+#### 筛法求质数
 
 求 $1 \sim n$ 中所有质数，以及 $1 \sim n$ 中各数的最小质因子。
 
@@ -418,4 +469,16 @@ void get_primes(int n) {
 
 ## 数学结论
 
-1. 算数基本定理：任何一个大于 $1$ 的自然数 $N$，如果 $N$ 不为质数，那么 $N$ 可以唯一分解成有限个质数的乘积。
+1. 多重集排列数
+
+$$
+    N = \frac{(n_1 + n_2 + \ldots + n_k)!}{n_1! + n_2! + \ldots + n_k!}
+$$
+
+2. 约数问题
+
+设 $N$ 为自然数，即 $N = P^{\alpha_1}_1 \times P^{\alpha_2}_2 \times \ldots \times P^{\alpha_k}_k$，那么
+
+其约数总数为 $(\alpha_1 + 1)(\alpha_2 + 1) \ldots (\alpha_k + 1)$，
+
+约数之和为 $(1 + P_1 + P^2_{1} + \ldots + P^{\alpha_1}_1)(1 + P_2 + P^2_{2} + \ldots + P^{\alpha_2}_2) \ldots (1 + P_k + P^2_{k} + \ldots + P^{\alpha_k}_k)$。
