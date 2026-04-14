@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatDate(date: Date) {
-  return Intl.DateTimeFormat('en-US', {
+  return Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -23,7 +23,7 @@ export function calculateWordCountFromHtml(
 
 export function readingTime(wordCount: number): string {
   const readingTimeMinutes = Math.max(1, Math.round(wordCount / 200))
-  return `${readingTimeMinutes} min read`
+  return `预计阅读 ${readingTimeMinutes} 分钟`
 }
 
 export function getHeadingMargin(depth: number): string {
