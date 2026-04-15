@@ -34,7 +34,7 @@ const isSubpost = !!parentPost
       <span class="w-full text-left text-sm text-balance text-ellipsis">
         {
           olderPost?.data.title ||
-            (isSubpost ? 'No older subpost' : "已经在最旧文章！")
+            (isSubpost ? 'No older subpost' : "已经是最旧文章！")
         }
       </span>
     </div>
@@ -82,7 +82,7 @@ const isSubpost = !!parentPost
       <span class="w-full text-right text-sm text-balance text-ellipsis">
         {
           newerPost?.data.title ||
-            (isSubpost ? 'No newer subpost' : "已经在最新文章！")
+            (isSubpost ? 'No newer subpost' : "已经是最新文章！")
         }
       </span>
     </div>
